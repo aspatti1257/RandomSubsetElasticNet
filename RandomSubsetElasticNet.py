@@ -99,7 +99,7 @@ class RandomSubsetElasticNet:
             raise AttributeError("Unable to instantiate RandomSubsetElasticNetModel due to invalid parameters: " +
                                  str(statement))
         else:
-            self.log.debug("Valid parameters requested. Creating RandomSubsetElasticNetModel.")
+            self.log.debug("Valid parameters requested. Creating RandomSubsetElasticNet model.")
 
     def determineBinCatFeatureIndices(self, binary_feature_indices):
         bin_cat_features = {}
@@ -108,7 +108,7 @@ class RandomSubsetElasticNet:
         return bin_cat_features
 
     def fit(self, features, results):
-        self.determineUniqueFeatureBinaryFeatureValues(features)
+        self.determineUniqueBinaryFeatureValues(features)
         min_count = int(self.lower_bound * len(features))
         if min_count == 0:
             min_count = 1
@@ -160,12 +160,15 @@ class RandomSubsetElasticNet:
         fallback_phrase = RecursiveBooleanPhrase(None, None, None, None)
         self.createAndFitModel(fallback_phrase, full_pool)
 
-    def determineUniqueFeatureBinaryFeatureValues(self, features):
+    def determineUniqueBinaryFeatureValues(self, features):
         for feature_set in features:
             for i in range(0, len(feature_set)):
                 if i in list(self.feature_indices_to_values.keys()) and feature_set[i] not in \
                         self.feature_indices_to_values[i]:
                     self.feature_indices_to_values[i].append(feature_set[i])
+                    if len(self.feature_indices_to_values[i]) > 2:
+                        self.log.error("Non-binary feature detected during training at index %s", i)
+                        raise ValueError("Non-binary feature detected during training at index %s", i)
 
     def generatePhrase(self, current_phrase, feature_to_split_on, min_count, selected_pool):
         value_to_split_on = random.choice(self.feature_indices_to_values[feature_to_split_on])
@@ -193,7 +196,7 @@ class RandomSubsetElasticNet:
         model = ElasticNet(alpha=self.alpha, l1_ratio=self.l_one_ratio)
         model.fit(trimmed_features, selected_pool[RandomSubsetElasticNet.RESULTS])
         r_squared_score = r2_score(selected_pool[RandomSubsetElasticNet.RESULTS], model.predict(trimmed_features))
-        if current_phrase.split is None or r_squared_score <= 0:  # always accept the fallback model
+        if current_phrase.split is None or r_squared_score > 0:  # always accept the fallback model
             model_phrase = ModelPhraseDataObject(model, current_phrase, r_squared_score)
             self.log.debug("Created model for phrase: %s. \nWith R^2 score of: ", current_phrase.toSummaryString(),
                            r_squared_score)
