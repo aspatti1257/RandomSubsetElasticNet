@@ -1,12 +1,12 @@
 # RandomSubsetElasticNet
 
 
-The RandomSubsetElasticNet model will split training data into randomly generated subsets and train an Elastic Net
+The RandomSubsetElasticNet model will split training data into randomly generated subsets and train an ElasticNet
 model for each subset. Subsets are determined by splitting on the training data's binary categorical features. These
 feature indices must be provided to the model at instantiation. Subsets are created with replacement, so one sample
 can be part of the training data for multiple ElasticNet models. These subsets are created until a percentage of the
 training data greater than or equal to the coverage_threshold fits at least one generated models to create is
-provided, it will make boolean subsets until that number is hit (determined by ). subset. If an explicit number of
+provided, it will make boolean subsets until that number is hit. subset. If an explicit number of
 models to create is provided, it will make boolean subsets until that number is hit (determined by
 explicit_model_count). It can exit early if no more samples are covered after a certain number of attempts are made
 (determined by max_boolean_generation_attempts). Each boolean statement must cover between lower_bound and upper_bound
